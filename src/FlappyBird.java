@@ -4,17 +4,19 @@ import java.util.ArrayList;
 import java.util.Random;
 import javax.swing.*;
 
+// The FlappyBird class extends JPanel to create a custom game panel and implements ActionListener and KeyListener
+// to handle game updates and user input events, respectively.
 public class FlappyBird extends JPanel implements ActionListener, KeyListener {
     int boardWidth = 360;
     int boardHeight = 640;
 
-    //images
+    //images for the game
     Image backgroundImg;
     Image birdImg;
     Image topPipeImg;
     Image bottomPipeImg;
 
-    //bird class
+    //bird class to represent the player
     int birdX = boardWidth/8;
     int birdY = boardWidth/2;
     int birdWidth = 34;
@@ -26,13 +28,13 @@ public class FlappyBird extends JPanel implements ActionListener, KeyListener {
         int width = birdWidth;
         int height = birdHeight;
         Image img;
-
+        
         Bird(Image img) {
             this.img = img;
         }
     }
 
-    //pipe class
+    //pipe class to represent obstacles
     int pipeX = boardWidth;
     int pipeY = 0;
     int pipeWidth = 64;  //scaled by 1/6
@@ -51,11 +53,12 @@ public class FlappyBird extends JPanel implements ActionListener, KeyListener {
         }
     }
 
-    //game logic
+    //game logic variables
     Bird bird;
     int velocityX = -4; //move pipes to the left speed (simulates bird moving right)
     int velocityY = 0; //move bird up/down speed.
     int gravity = 1;
+
 
     ArrayList<Pipe> pipes;
     Random random = new Random();
@@ -65,23 +68,24 @@ public class FlappyBird extends JPanel implements ActionListener, KeyListener {
     boolean gameOver = false;
     double score = 0;
 
+    // Initialize the game panel, load images, and start timers
     FlappyBird() {
         setPreferredSize(new Dimension(boardWidth, boardHeight));
         // setBackground(Color.blue);
         setFocusable(true);
         addKeyListener(this);
 
-        //load images
+        //load images for the game
         backgroundImg = new ImageIcon(getClass().getResource("./flappybirdbg.png")).getImage();
         birdImg = new ImageIcon(getClass().getResource("./flappybird.png")).getImage();
         topPipeImg = new ImageIcon(getClass().getResource("./toppipe.png")).getImage();
         bottomPipeImg = new ImageIcon(getClass().getResource("./bottompipe.png")).getImage();
 
-        //bird
+        // Initialize the bird and pipes
         bird = new Bird(birdImg);
         pipes = new ArrayList<Pipe>();
 
-        //place pipes timer
+        //place pipes at intervals
         placePipeTimer = new Timer(1500, new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -91,11 +95,12 @@ public class FlappyBird extends JPanel implements ActionListener, KeyListener {
         });
         placePipeTimer.start();
         
-		//game timer
+		// Main game loop to update game state and repaint 
 		gameLoop = new Timer(1000/60, this); //how long it takes to start timer, milliseconds gone between frames 
         gameLoop.start();
 	}
     
+    // Place pipes at random heights with an opening space
     void placePipes() {
         //(0-1) * pipeHeight/2.
         // 0 -> -128 (pipeHeight/4)
@@ -118,6 +123,7 @@ public class FlappyBird extends JPanel implements ActionListener, KeyListener {
 		draw(g);
 	}
 
+    // Draw the background, bird, pipes, and score
 	public void draw(Graphics g) {
         //background
         g.drawImage(backgroundImg, 0, 0, this.boardWidth, this.boardHeight, null);
@@ -144,6 +150,7 @@ public class FlappyBird extends JPanel implements ActionListener, KeyListener {
         
 	}
 
+    // Update bird and pipe positions, check for collisions, and update score
     public void move() {
         //bird
         velocityY += gravity;
@@ -170,6 +177,7 @@ public class FlappyBird extends JPanel implements ActionListener, KeyListener {
         }
     }
 
+    // Checks for collisions between bird and pipes
     boolean collision(Bird a, Pipe b) {
         return a.x < b.x + b.width &&   //a's top left corner doesn't reach b's top right corner
                a.x + a.width > b.x &&   //a's top right corner passes b's top left corner
@@ -177,6 +185,7 @@ public class FlappyBird extends JPanel implements ActionListener, KeyListener {
                a.y + a.height > b.y;    //a's bottom left corner passes b's top left corner
     }
 
+    // Handle game loop actions: move, repaint, and check for game over
     @Override
     public void actionPerformed(ActionEvent e) { //called every x milliseconds by gameLoop timer
         move();
@@ -187,6 +196,7 @@ public class FlappyBird extends JPanel implements ActionListener, KeyListener {
         }
     }  
 
+    // Handle key press events to control bird
     @Override
     public void keyPressed(KeyEvent e) {
         if (e.getKeyCode() == KeyEvent.VK_SPACE) {
@@ -205,11 +215,9 @@ public class FlappyBird extends JPanel implements ActionListener, KeyListener {
             }
         }
     }
-
-    //not needed
+    // For FlappyBird these methods are not needed; These methods are unused in this game
     @Override
     public void keyTyped(KeyEvent e) {}
-
     @Override
     public void keyReleased(KeyEvent e) {}
 }
