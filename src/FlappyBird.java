@@ -201,8 +201,13 @@ public class FlappyBird extends JPanel implements ActionListener, KeyListener {
     public void keyPressed(KeyEvent e) {
         if (e.getKeyCode() == KeyEvent.VK_SPACE) {
             // System.out.println("JUMP!");
-            velocityY = -9;
-
+            if (e.isShiftDown()) {
+                velocityY = -18; //if shift and space are pressed similtaneously than the flappy bird does a super jump
+            } else {
+                velocityY = -9;// regular jump if only space is pressed
+            }
+        
+       
             if (gameOver) {
                 //restart game by resetting conditions
                 bird.y = birdY;
@@ -212,9 +217,10 @@ public class FlappyBird extends JPanel implements ActionListener, KeyListener {
                 score = 0;
                 gameLoop.start();
                 placePipeTimer.start();
-            }
+            } 
         }
     }
+    
     // For FlappyBird these methods are not needed; These methods are unused in this game
     @Override
     public void keyTyped(KeyEvent e) {}
