@@ -44,6 +44,7 @@ public class FlappyBird extends JPanel implements ActionListener, KeyListener {
     class Pipe {
         int x = pipeX;
         int y = pipeY;
+        int initialY;
         int width = pipeWidth;
         int height = pipeHeight;
         Image img;
@@ -57,7 +58,7 @@ public class FlappyBird extends JPanel implements ActionListener, KeyListener {
         Pipe(Image img) {
             this.img = img;
             if (score >= 20) { //checks if 20 pipes were passed through
-                this.isMoving = random.nextBoolean(); // Randomly decides if the nextpipe will be moving or stationary (after 20 pipes)
+                this.isMoving = true; 
             }
         }
 
@@ -66,21 +67,20 @@ public class FlappyBird extends JPanel implements ActionListener, KeyListener {
         public void pipeMovement() {
             x += velocityX; // move both pipes horizontally with the same velocity
 
-            if (isMoving) { //checks if 20 pipes were passed through 
-                if (moveUp) {
-                    y -= pipeSpeed; // if the pipe is moving up, its y coordinate is decreased by pipeSpeed
-                    if (y < -pipeHeight) { //ensures that the pipe doesn't move too far up
+            if (moveUp) {
+                y -= pipeSpeed; // if the pipe is moving up, its y coordinate is decreased by pipeSpeed
+                if (y < initialY - 50) { //ensures that the pipe doesn't move too far up
                         moveUp = false;
-                    }
-                } else {
-                    y += pipeSpeed; // if the pipe is moving down, its y coordinate is increased by pipeSpeed
-                    if (y > boardHeight) { // ensures that the pipe doesn't move too far down
-                        moveUp = true;
-                    }
                 }
-            }        
-        } 
-    }
+            } else {
+                y += pipeSpeed; // if the pipe is moving down, its y coordinate is increased by pipeSpeed
+                if (y > initialY + 50) { // ensures that the pipe doesn't move too far down
+                        moveUp = true;
+                }
+            }
+        }        
+    } 
+
 
     //game logic variables
     Bird bird;
@@ -119,7 +119,7 @@ public class FlappyBird extends JPanel implements ActionListener, KeyListener {
             @Override
             public void actionPerformed(ActionEvent e) {
               // Code to be executed
-              placePipes();
+              checkAndPlacePipe();
             }
         });
         placePipeTimer.start();
@@ -148,7 +148,35 @@ public class FlappyBird extends JPanel implements ActionListener, KeyListener {
         pipes.add(bottomPipe);
     }
     
+    void placeMovingPipes() {
+        int randomPipeY = (int) (pipeY - pipeHeight / 4 - Math.random() * (pipeHeight / 2));
+        int openingSpace = boardHeight / 4;
     
+        // Top Pipe
+        Pipe topPipe = new Pipe(topPipeImg);
+        topPipe.y = randomPipeY;
+        topPipe.initialY = randomPipeY;
+        topPipe.isMoving = true;
+        pipes.add(topPipe);
+    
+        // Bottom Pipe
+        Pipe bottomPipe = new Pipe(bottomPipeImg);
+        bottomPipe.y = topPipe.y + pipeHeight + openingSpace;
+        bottomPipe.initialY = bottomPipe.y;
+        bottomPipe.isMoving = true;
+        pipes.add(bottomPipe);
+    }
+    
+    // Checks whether next pipes are stationary or moving pipes 
+    void checkAndPlacePipe() {
+        if (score >= 20 && random.nextBoolean()) {
+            placeMovingPipes();
+        } else {
+            placePipes();
+        }
+    }
+
+
     public void paintComponent(Graphics g) {
 		super.paintComponent(g);
 		draw(g);
@@ -189,14 +217,29 @@ public class FlappyBird extends JPanel implements ActionListener, KeyListener {
         bird.y = Math.max(bird.y, 0); //apply gravity to current bird.y, limit the bird.y to top of the canvas
 
         //pipes
-        for (Pipe pipe : pipes) {
-            pipe.pipeMovement(); // Move both pipes together
-            if (!pipe.passed && bird.x > pipe.x + pipe.width) {
-                score += 0.5; // Because there are 2 pipes so 0.5 for each equals 1
-                pipe.passed = true;
+        for (int i = 0; i < pipes.size(); i += 2) {
+            Pipe topPipe = pipes.get(i);
+            Pipe bottomPipe = pipes.get(i + 1);
+
+            // Ensure bottomPipe moves together with topPipe
+            if (topPipe.isMoving && bottomPipe.isMoving) {
+                topPipe.pipeMovement();
+                bottomPipe.pipeMovement();
+                bottomPipe.y = topPipe.y + pipeHeight + (boardHeight / 4);
+            } else {
+                topPipe.x += velocityX;
+                bottomPipe.x += velocityX;
             }
+
+            if (!topPipe.passed && bird.x > topPipe.x + topPipe.width) {
+                score += 1; // Because there are 2 pipes so 0.5 for each equals 1
+                topPipe.passed = true;
+                bottomPipe.passed = true;
+            }
+
+
             // Check for collision
-            if (collision(bird, pipe)) {
+            if (collision(bird, topPipe) || collision(bird, bottomPipe)) {
                 gameOver = true;
             }
         }
